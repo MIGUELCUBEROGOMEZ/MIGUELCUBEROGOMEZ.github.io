@@ -1,0 +1,422 @@
+---
+title: "Diversos tipos de clusterización"
+---
+
+# Segmentación de clientes
+
+## Análisis previo
+
+Comenzaremos cargando las librerías que vamos a utilizar:
+
+```{r }
+suppressMessages({
+    suppressWarnings({
+          library(skimr)
+          library(corrplot)
+          library(Rtsne)
+          library(cluster)
+          library(kernlab)
+          library(skmeans)
+          library(ggplot2)
+          library(dplyr)
+          library(DescTools)
+          library(Rtsne)
+          library(irlba)
+          library(Matrix)
+          library(leaflet)
+          library(tidyverse)  
+          library(cluster)    
+          library(factoextra) 
+          library(data.table)
+          library(rgl)
+          library(magick)
+          library(rglwidget)
+          library(meanShiftR)
+          library(kernlab)
+
+})})
+```
+
+Ajustamos una semilla para realizar correctamente el clustering
+
+```{r}
+set.seed(1234)
+```
+
+Ahora cargamos nuestro conjunto de datos y los mostramos.
+
+```{r}
+datos <- read.csv(file="C:/Users/Miguel/Desktop/Matemáticas/Aprendizaje Automático/Credit_Card_Segmentation.csv", header=T)
+head(datos)
+```
+
+Vamos a explicar cada una de las variables:
+
+**CUST_ID**: Identificación del titular de la tarjeta de crédito (Categórico).
+
+**BALANCE**: Cantidad de saldo restante en su cuenta para realizar compras.
+
+**BALANCE_FREQUENCY**: Con qué frecuencia se actualiza el saldo, puntuación entre 0 y 1 (1 = actualizado con frecuencia, 0 = no actualizado con frecuencia).
+
+**PURCHASES**: Cantidad de compras realizadas desde la cuenta.
+
+**ONEOFF_PURCHASES**: Cantidad máxima de compra realizado de una sola vez.
+
+**INSTALLMENTS_PURCHASES**: Cantidad de compra realizado en cuotas.
+
+**CASH_ADVANCE**: Efectivo adelantado proporcionado por el usuario.
+
+**PURCHASES_FREQUENCY**: Con qué frecuencia se realizan las compras, puntuación entre 0 y 1 (1 = compras frecuentes, 0 = compras no frecuentes).
+
+**ONEOFFPURCHASESFREQUENCY**: Con qué frecuencia se realizan compras de una sola vez (1 = compras frecuentes, 0 = compras no frecuentes).
+
+**PURCHASESINSTALLMENTSFREQUENCY**: Con qué frecuencia se realizan compras a plazos (1 = se realizan con frecuencia, 0 = no se realizan con frecuencia).
+
+**CASHADVANCEFREQUENCY**: Con qué frecuencia se realiza el pago de efectivo por adelantado.
+
+**CASHADVANCETRX**: Número de transacciones realizadas con "Efectivo por adelantado".
+
+**PURCHASES_TRX**: Número de transacciones de compra realizadas.
+
+**CREDIT_LIMIT**: Límite de la tarjeta de crédito para el usuario.
+
+**PAYMENTS**: Cantidad de pago realizado por el usuario.
+
+**MINIMUM_PAYMENTS**: Cantidad de pagos realizados por el usuario.
+
+**PRCFULLPAYMENT**: Porcentaje de pago completo realizado por el usuario.
+
+**TENURE**: Duración del servicio de la tarjeta de crédito para el usuario.
+
+Vamos a estudiar cuales de las variables anteriores tienen valores ausentes.
+
+```{r}
+valores_faltantes <- colSums(is.na(datos))
+print(valores_faltantes)
+```
+
+Para lidiar con ellos los sustituiremos por la moda de cada variable. Primero nos quedaremos con los datos sin la ID del cliente y mostraremos un resumen de sus estadísticas.
+
+```{r}
+datossinID <- datos[,2:18]
+skim(datos)
+```
+
+Una vez visto el resumen podemos sustituir los valores ausentes
+
+```{r}
+for (i in 1:8950){
+  if (is.na(datossinID$CREDIT_LIMIT[i])==TRUE)
+    datossinID$CREDIT_LIMIT[i]<-3000
+  
+  if (is.na(datossinID$MINIMUM_PAYMENTS[i])==TRUE)
+    datossinID$MINIMUM_PAYMENTS[i]<-312
+}
+```
+
+Ahora comprobamos si los hemos eliminado bien.
+
+```{r}
+valores_faltantessinid <- colSums(is.na(datossinID))
+print(valores_faltantessinid)
+```
+
+A continuación representaremos la correlación entre las variables.
+
+```{r}
+correlation_matrix <- cor(datossinID)
+corrplot(correlation_matrix, tl.cex = 0.6)
+```
+
+Como vemos no hay grandes correlaciones salve entre oneoff_purchases y purchases; purchases_installments_frequency y purchases_frequency y entre cash_advance_trx y cash_advance_frequency.
+
+A continuación realizaremos un análisis de componentes principales para ver si podemos reducir el número de variables con el objetivo de representar de una manera más comprensiva los reesultados del clustering.
+
+```{r}
+pr.out <- prcomp(datossinID, scale = TRUE)
+biplot(pr.out, scale = 0)
+```
+
+En esta primera imagen no observamos una gran segmentación ni de las variables ni de los clientes. Esto se debe a que las dos primeras componentes recogen poca información, menos del 50%. Las siguientes líneas nos muestran la varianza de cada una de las componentes principales
+
+```{r}
+pr.var <- pr.out$sdev^2
+pr.var
+```
+
+Ahora viendo el porcentaje total de cada componente.
+
+```{r}
+pve <- pr.var / sum(pr.var) 
+pve*100
+```
+
+Las dos primeras tan solo recogen un 47 % de la información por lo que se descarta un análisis en dos dimensiones. Los dos siguientes gráficos recogen esta información:
+
+```{r}
+ plot(pve, xlab = "Número de Componentes Principales",
+     ylab = "Proporción de varianza explicada", ylim = c(0, 1),
+     type = "b")
+```
+
+```{r}
+plot(cumsum(pve), xlab = "Número de Componentes Principales",
+     ylab = "Suma acumulada de la proporción de varianza explicada",
+     ylim = c(0, 1), type = "b")
+ abline(h = 0.9, col = "red", lty = 2)
+```
+
+Para quedarnos con el 90% de la información necesitamos 9 componentes principales. Dado que con PCA no conseguimos reducir la información lo suficiente necesitamos realizar tsne.
+
+```{r}
+suppressMessages({
+         suppressWarnings({
+                     for (col in colnames(datossinID)) {
+                                     p <- ggplot(datos, aes(x = datossinID[[col]])) +
+                                      geom_histogram(fill = "blue", color = "black", alpha = 0.7) +
+                                      ggtitle(paste("Histograma de", col)) +
+                                      labs(x=col) +
+                                      theme_minimal() +
+                                      theme(panel.grid = element_blank(),
+                                      panel.background = element_rect(colour = "black", size = 2),
+                                      plot.title = element_text(hjust = 0.5))
+                          
+  print(p)  
+}
+})})
+```
+
+A la vista de los histogramas dado que casi todas las variables tienen outliers y por la distribución de las mismas hemos considerado realizar una transformación de escala logarítmica.
+
+```{r}
+datossinID <- datossinID + 0.01
+logscaled_data <- log(datossinID)
+head(logscaled_data)
+```
+
+Escalamos los datos para que el clustering sea correcto, probaremos dos tipos de datos escalados.
+
+```{r}
+datosscale <- scale(logscaled_data)
+
+min_max_scaler <- function(x) {
+  (x - min(x)) / (max(x) - min(x))
+}
+
+datosminmax <- apply(logscaled_data, 2, min_max_scaler)
+```
+
+Ahora analizamos el que resume mejor las variables usando prcomp. En primer lugar usando scale.
+
+```{r}
+pr.out.scale <- prcomp(datosscale, scale = FALSE)
+pr.var.scale <- pr.out.scale$sdev^2
+pve.scale <- pr.var.scale / sum(pr.var.scale) 
+pve.scale*100
+```
+
+Ahora veamos usando minmax.
+
+```{r}
+pr.out.minmax <- prcomp(datosminmax, scale = FALSE)
+pr.var.minmax <- pr.out.minmax$sdev^2
+pve.minmax <- pr.var.minmax / sum(pr.var.minmax) 
+pve.minmax*100
+```
+
+Como vemos obtenemos mejor resultado usando minmax y las 3 primeras componentes representan más del 80% de la información.
+
+```{r}
+(pve.minmax[1]+pve.minmax[2]+pve.minmax[3])*100
+```
+
+Dibujamos los datos en las 3 primeras componentes principales
+
+```{r}
+library(plot3D)
+pca_data <- pr.out.minmax$x[, 1:3]
+#plot3d( pca_data, col = "blue", type = "s", radius = .2 )
+#play3d(spin3d(axis = c(1,0,0), rpm = 4), duration = 20) Si queremos ver el gráfico 3D
+#rglwidget()
+scatter3D(pca_data[, 1], pca_data[, 2], pca_data[, 3], col = "red", pch = 16,
+          xlab = "Componente 1", ylab = "Componente 2", zlab = "Componente 3")
+
+```
+
+## PAM
+
+El primer método que usaremos será PAM. PAM (Partitioning Around Medoids) es un algoritmo de agrupamiento que identifica medoides, puntos representativos, en lugar de centroides como en k-medias. A diferencia de k-medias, PAM es robusto a valores atípicos, ya que utiliza observaciones reales en lugar de promedios. El algoritmo selecciona medoides que minimizan la distancia total a otros puntos dentro de cada clúster. Lo primero que haremos será usar el método para ver el número de clusters que decidimos tomar.
+
+```{r}
+n_clust <- 2:10
+pam_list <- lapply(n_clust, function(x) pam(datosminmax, k = x))
+```
+
+Para ello veremos los valores del ancho del coeficiente de silueta (*sil_width*). Este coeficiente nos proporciona una forma de medir la separación y cohesión de los grupos, el mayor valor será el valor óptimo.
+
+```{r}
+sil_width <- lapply(pam_list, function(x) mean(x$silinfo$widths[, "sil_width"]))
+#plot(n_clust, sil_width, type="l")
+sil_df <- data.frame(Clusters = n_clust, Silhouette_Width = unlist(sil_width))
+ggplot(sil_df, aes(x = Clusters, y = Silhouette_Width)) +
+  geom_line(size = 1.5) +  
+  geom_point(color = "red") +
+  geom_text(aes(label = round(Silhouette_Width, 3)), nudge_y = -0.01, color = "red", size = 4) +  
+  labs(title = "Valores del Ancho del Coeficiente de Silueta",
+       x = "Número de clusters",
+       y = "Ancho del Coeficiente de Silueta") +
+  scale_x_continuous(breaks = seq(2, 10, by = 1), labels = abs(seq(2, 10, by = 1))) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line = element_line(colour = "black"),      
+        axis.text.y = element_blank(),     
+        axis.ticks.y = element_blank(),    
+        panel.background = element_rect(colour = "black", size = 2),
+        plot.title = element_text(hjust = 0.5))
+```
+
+Como vemos en el gráfico el valor óptimo se alcanza con 9 clusters muy a la par con el valor con 10 clusters. Ahora representaremos el gráfico con las 3 componentes usando estos 9 clusters.
+
+```{r}
+
+pam_result <- pam_list[[8]]
+
+cluster_labelsPAM <- pam_result$clustering
+
+plot3d(pca_data, col = cluster_labelsPAM + 1, type = "s", radius = 0.2)
+rglwidget()
+
+```
+
+Otra forma de representarlos será usando tsne. A continuación cargamos tsne y guardamos los datos usando los clusters del PAM anterior.
+
+```{r}
+tsne_result <- Rtsne(datosminmax)
+tsne_dfPAM <- data.frame(x = tsne_result$Y[, 1], y = tsne_result$Y[, 2], Cluster = factor(cluster_labelsPAM))
+```
+
+A continuación mostramos el gráfico.
+
+```{r}
+ggplot(tsne_dfPAM, aes(x, y, color = Cluster)) +
+  geom_point(size = 3) +
+  labs(title = "Visualización t-SNE con colores PAM para 9 Clusters", color = "Cluster",x="",y="") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),      
+        axis.ticks.y = element_blank(),     
+        panel.background = element_rect(colour = "black", size=2),
+        plot.title = element_text(hjust = 0.5))
+```
+
+## AGNES(hclust)
+
+El segundo método que usaremos será AGNES. Como vimos en clase este método da mejor resultados usando como distancia *ward.D2*. Lo primero que haremos será mostrar su dendograma.
+
+```{r}
+clus <- hclust(dist(datosminmax),method="ward.D2")
+plot(clus)
+```
+
+Si elegimos 9 clusters como vimos anteriormente el dendograma y el tsne quedarían como sigue:
+
+```{r}
+plot(clus)
+rect.hclust(clus, k = 9, border = 1:9) 
+
+cluster_labelsHCLUST <- cutree(clus, k = 9)
+tsne_dfAGNES <- data.frame(x = tsne_result$Y[, 1], y = tsne_result$Y[, 2], Cluster = factor(cluster_labelsHCLUST))
+
+ggplot(tsne_dfAGNES, aes(x, y, color = Cluster)) +
+  geom_point(size = 3) +
+  labs(title = "Visualización t-SNE con colores AGNES para 9 Clusters", color = "Cluster",x="",y="") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),      
+        axis.ticks.y = element_blank(),     
+        panel.background = element_rect(colour = "black", size=2),
+        plot.title = element_text(hjust = 0.5))
+```
+
+A simple vista parece que se mezclan menos que cuando usabamos PAM, aunque ambas representaciones son muy similares. Podemos probar a realizarlo cortando el dendograma por 6, en cajas más grandes.
+
+```{r}
+plot(clus)
+rect.hclust(clus, k = 6, border = 1:6) 
+
+cluster_labelsHCLUST <- cutree(clus, k = 6)
+tsne_dfAGNES <- data.frame(x = tsne_result$Y[, 1], y = tsne_result$Y[, 2], Cluster = factor(cluster_labelsHCLUST))
+
+ggplot(tsne_dfAGNES, aes(x, y, color = Cluster)) +
+  geom_point(size = 3) +
+  labs(title = "Visualización t-SNE con colores AGNES para 6 Clusters", color = "Cluster",x="",y="") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),      
+        axis.ticks.y = element_blank(),     
+        panel.background = element_rect(colour = "black", size=2),
+        plot.title = element_text(hjust = 0.5))
+```
+
+Como vemos también obtenemos buenos resultados.
+
+## Mean Shift
+
+El tercer método, Mean Shift, implica una técnica de agrupamiento no paramétrica. Se basa en desplazar iterativamente los puntos de datos hacia las regiones de mayor densidad en el espacio, convergiendo hacia los modos locales. Este enfoque encuentra naturalmente el número óptimo de clusters sin la necesidad de especificarlos previamente.
+
+```{r}
+datosms <- as.matrix(datosminmax)
+
+msresult <- meanShift(datosms, epsilon = 1e-3)
+cluster_labelsMeanShift <- msresult$assignment
+
+tsne_dfMeanShift <- data.frame(x = tsne_result$Y[, 1], y = tsne_result$Y[, 2], Cluster = factor(cluster_labelsMeanShift))
+
+ggplot(tsne_dfMeanShift, aes(x, y, color = Cluster)) +
+  geom_point(size = 3) +
+  labs(title = "Visualización t-SNE con colores Mean Shift ", color = "Cluster", x = "", y = "") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        panel.background = element_rect(colour = "black", size = 2),
+        plot.title = element_text(hjust = 0.5))
+```
+
+Este método sin embargo, no diferencia tan bien como los anteriores, al menos por lo que vemos a la hora de realziar el tsne. Además toma 15 clusters complicando su representación y su segmentación.
+
+## Spectral Clustering
+
+Por último, el cuarto método será Spectral Clustering, una técnica que utiliza la estructura de los eigenvectores de la matriz de afinidad para agrupar datos de manera eficiente y capturar patrones no lineales en conjuntos de datos. Esta técnica es especialmente útil para identificar clústeres con formas complejas y no convencionales. Debido a tiempo de cálculo realizaremos spectral con 3 centros y usando tan solo 2000 datos. Para ello haremos un sample de 2000 observaciones para que sea más aleatorio.
+
+```{r}
+
+posiciones <- sample(1:8950, 2000)
+
+scresult <- specc(as.matrix(datosminmax[posiciones, ]), centers=3)
+
+tsne_result <- Rtsne(datosminmax[posiciones, ])
+
+tsne_dfSpectral <- data.frame(x = tsne_result$Y[, 1], y = tsne_result$Y[, 2], Cluster =factor(scresult))
+
+ggplot(tsne_dfSpectral, aes(x, y, color = Cluster)) +
+  geom_point(size = 3) +
+  labs(title = "Visualización t-SNE con colores Spectral Clustering para 3 Clusters", color = "Cluster", x = "", y = "") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        panel.background = element_rect(colour = "black", size = 2),
+        plot.title = element_text(hjust = 0.5))
+```
+
+## Conclusiones
+
+Por lo visto anteriormente, si hemos de elegir un número de segmentaciones sería de 9. Además, los modelos que mejores resutlados nos han aportado han sido PAM y AGNES, métodos más sencillos que los dos últimos. A pesar de los resultados de spectral son resultados con menor cantidad de observaciones.
+
+Tal vez sean modelos complejos que necesiten de mayor cantidad de datos para generar resultados decentes. Incluso necesitraíamos mayor potencia pues hemos tenido que reducir el número de observaciones para poder realizar spectral_clusteering

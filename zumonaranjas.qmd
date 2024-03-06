@@ -1,0 +1,377 @@
+---
+title: "Validación cruzada en diversos modelos"
+---
+
+# ¿En qué tienda se compraron los zumos?
+
+## Intoducción
+
+Los datos contienen 1070 compras en las que el cliente compró Citrus Hill o Minute Maid Orange Juice. Se registran una serie de características del cliente y del producto. El objetivo del conjunto de datos es predecir qué zumo se compró.
+
+Tenemos 6 variables categóricas, una de ellas un factor las demás escritas como números discretos. Por otro lado tenemos 11 variables numéricas.
+
+Cargamos las librerías y vemos los datos, así como su resumen.
+
+```{r}
+suppressMessages({
+    suppressWarnings({
+library(ISLR2, quietly = TRUE)
+library(corrplot, quietly = TRUE)
+library(ggplot2, quietly = TRUE)
+library(dplyr, quietly = TRUE)
+library(caTools, quietly = TRUE)
+library(caret, quietly = TRUE)
+library(class, quietly = TRUE)
+library(randomForest, quietly = TRUE)
+library(e1071, quietly = TRUE)
+library(MASS, quietly = TRUE)
+library(rpart, quietly = TRUE)
+library(lattice, quietly = TRUE)
+library(nnet, quietly = TRUE)
+library(mlbench, quietly = TRUE)
+library(adabag, quietly = TRUE)
+    })})
+head(OJ)
+summary(OJ)
+```
+
+Veamos si hay valores faltantes en los datos.
+
+```{r}
+valores_faltantes <- colSums(is.na(OJ))
+print(valores_faltantes)
+```
+
+Estudiemos como es la variable storeID, hay 5 posibles tiendas.
+
+```{r}
+unique(OJ$StoreID)
+```
+
+Esto nos dice que hay variables que contienen la misma información y tendremos que modificar los datos para mejorar su calidad. Ahora veremos como se distribuyen las variables.
+
+```{r}
+par(mfrow=c(2,7))
+hist(OJ$WeekofPurchase, main = "")
+hist(OJ$StoreID, main = "")
+hist(OJ$PriceCH, main = "")
+hist(OJ$PriceMM, main = "")
+hist(OJ$DiscCH, main = "")
+hist(OJ$DiscMM, main = "")
+hist(OJ$LoyalCH, main = "")
+hist(OJ$SalePriceMM, main = "")
+hist(OJ$SalePriceCH, main = "")
+hist(OJ$PriceDiff, main = "")
+hist(OJ$PctDiscMM, main = "")
+hist(OJ$PctDiscCH, main = "")
+hist(OJ$ListPriceDiff, main = "")
+```
+
+Fijandonos podemos observar caracteristicas de las variables Vemos como las distribuciones suelen estar concentradas en torno a un valor que destaca más que el resto.
+
+Eliminamos las varibales Store7 y STORE porque esta información ya está contenida en StoreID:
+
+```{r}
+OJ <- OJ[, !(names(OJ) %in% "Store7")]
+OJ <- OJ[, !(names(OJ) %in% "STORE")]
+```
+
+Usamos one-hot para separar la variable StoreID y luego eliminamos esta variable por las nuevas creadas.
+
+```{r}
+one_hot_storeid <- model.matrix(~ factor(StoreID) - 1, data = OJ)
+colnames(one_hot_storeid) <- paste("StoreID", levels(factor(OJ$StoreID)), sep = "_")
+OJ <- cbind(OJ, one_hot_storeid)
+OJ <- OJ[, !(names(OJ) %in% "StoreID")]
+```
+
+Ahora convertimos la clase en numérica y calculamos el porcentaje de cada clase.
+
+```{r}
+OJ$Purchase <- ifelse(OJ$Purchase == "CH", 1, 0)
+porcentajeCH <- sum(OJ$Purchase == 1) / nrow(OJ)
+porcentajeMM <- 1 - porcentajeCH
+cat("Procentaje de compras en Citrus Hill:",porcentajeCH)
+cat("Procentaje de compras en Minute Maid:",porcentajeMM)
+
+```
+
+Estudiamos las correlaciones entre las variables finales.
+
+```{r}
+par(mfrow = c(1, 1))
+correlation_matrix <- cor(OJ)
+corrplot(correlation_matrix,method = 'square',type = 'upper')
+```
+
+Ahora separamos nuestro conjunto de datos en datos de entrenamiento y de prueba.
+
+```{r}
+set.seed(1234)
+split <- sample.split(OJ$Purchase, SplitRatio = 0.80)
+training_set <- subset(OJ, split == TRUE)
+test_set <- subset(OJ, split == FALSE)
+```
+
+Después vamos a crear los conjuntos en los que realizaremos la validación cruzada para mejorar el rendimiento del modelo.
+
+```{r}
+folds <- createFolds(training_set$Purchase, k = 5)
+```
+
+Entrenamos LDA y mostramos los resultados:
+
+```{r}
+listamodelos <- list()
+listaprecisiones <- list()
+
+for (i in 1:5) {
+  training_fold <- training_set[-folds[[i]], ]
+  test_fold <- training_set[folds[[i]], ]
+  clasificador <- lda(Purchase ~ ., data = training_fold)
+  y_pred <- predict(clasificador, newdata = test_fold)$class
+  mc <- table(test_fold$Purchase, y_pred)
+  precision <- (mc[1,1] + mc[2,2]) / (mc[1,1] + mc[2,2] + mc[1,2] + mc[2,1])
+  listamodelos[[i]] <- clasificador
+  listaprecisiones[[i]] <- precision
+}
+
+precisionLDA <- mean(as.numeric(listaprecisiones))
+cat("\nPrecision media validacion cruzada LDA:",precisionLDA)
+cat("\nError medio validacion cruzada LDA:",1-precisionLDA)
+
+indice<- which.max(listaprecisiones)
+mejormodelo <- listamodelos[[indice]]
+predicciones <- predict(mejormodelo, newdata = test_set)$class
+mc <- table(test_set$Purchase, predicciones)
+precision <-(mc[1,1] + mc[2,2]) / (mc[1,1] + mc[2,2] +mc[1,2] + mc[2,1])
+cat("\nPrecision LDA:",precision)
+cat("\nError LDA:",1-precision)
+```
+
+En el caso del discriminante cuadrático (QDA) necesitamos que las variables no estén correlacionadas. Para ello tenemos que eliminar gran parte de ellas. Además mostramos un gráfico de las correlaciones restantes.
+
+```{r}
+training_setQDA <-training_set[,-c(3,4,7,9,10,11,12,13,14,15,20)]
+test_setQDA <- test_set[,-c(3,4,7,9,10,11,12,13,14,15,20)]
+
+correlation_matrix <- cor(training_setQDA)
+corrplot(correlation_matrix,method = 'square',type = 'upper')
+
+listamodelos <- list()
+listaprecisiones <- list()
+
+for (i in 1:5) {
+  training_fold <- training_setQDA[-folds[[i]],]
+  test_fold <- training_setQDA[folds[[i]],]
+  clasificador <- qda(Purchase ~ ., data = training_fold)
+  y_pred <- predict(clasificador, newdata = test_fold)$class
+  mc <- table(test_fold$Purchase, y_pred)
+  precision <- (mc[1,1] + mc[2,2]) / (mc[1,1] + mc[2,2] +mc[1,2] + mc[2,1])
+  listamodelos[[i]] <- clasificador
+  listaprecisiones[[i]] <- precision
+}
+
+precisionQDA <- mean(as.numeric(listaprecisiones))
+cat("\nPrecision media QDA:",precisionQDA)
+cat("\nError medio QDA:",1-precisionQDA)
+
+indice<- which.max(listaprecisiones)
+mejormodelo <- listamodelos[[indice]]
+predicciones <- predict(mejormodelo, newdata = test_set)$class
+mc <- table(test_set$Purchase, predicciones)
+precision <-(mc[1,1] + mc[2,2]) / (mc[1,1] + mc[2,2] +mc[1,2] + mc[2,1])
+cat("\nPrecision LDA:",precision)
+cat("\nError aLDA:",1-precision)
+```
+
+En el caso de k-vecinos más próximos primer calculamos el k-indicado con la validación cruzada y posteriormente lo probamos con el conjunto de prueba con el k que mejor resultado nos aporta.
+
+```{r}
+for(i in 1:10){
+cvkNN <- lapply(folds, function(x){
+  training_fold <- training_set[-x, ]
+  test_fold <- training_set[x, ]
+  y_pred <- knn(training_fold[, -1], 
+                test_fold[, -1], 
+                cl = training_fold[, 1], 
+                k = i)
+  mc <- table(test_fold$Purchase, y_pred)
+  precision <- (mc[1,1] + mc[2,2]) / (mc[1,1] + mc[2,2] +mc[1,2] + mc[2,1])
+  return(precision)
+})
+precisionkNN <- mean(as.numeric(cvkNN))
+cat("\nPrecision knn con k=",i,":",precisionkNN)
+cat("\nError knn con k=",i,":",1-precisionkNN)
+}
+
+knn_model <- knn(training_set[, -1], test_set[, -1], cl = training_set[, 1], k = 5)
+mc_test <- table(test_set$Purchase, knn_model)
+precision_test <- (mc_test[1, 1] + mc_test[2, 2]) / (mc_test[1, 1] + mc_test[2, 2] + mc_test[1, 2] + mc_test[2, 1])
+cat("\nPrecision k-NN en el conjunto de prueba con k =", 5, ":", precision_test)
+cat("\nError k-NN en el conjunto de prueba con k =", 5, ":", 1 - precision_test)
+
+```
+
+En este modelo, la regresión logística tiene como salida las probabilidades por lo que tenemos que convertirlas en las clases numericas que queremos.
+
+```{r}
+listamodelos <- list()
+listaprecisiones <- list()
+
+for (i in 1:5) {
+  training_fold <- training_set[-folds[[i]],]
+  test_fold <- training_set[folds[[i]],]
+  clasificador <- glm(Purchase ~ ., family = binomial, data = training_fold)
+  y_pred <- predict(clasificador, type = 'response', newdata = test_fold)
+  y_pred <- ifelse(y_pred > 0.5, 1, 0)
+  y_pred <- factor(y_pred, levels = c("0", "1"), labels = c("MM", "CH"))
+  mc <- table(test_fold$Purchase, y_pred)
+  precision <- (mc[1,1] + mc[2,2]) / (mc[1,1] + mc[2,2] +mc[1,2] + mc[2,1])
+  listamodelos[[i]] <- clasificador
+  listaprecisiones[[i]] <- precision
+}
+precisionRegresionLogistica <- mean(as.numeric(listaprecisiones))
+cat("\nPrecision Regresion Logistica:",precisionRegresionLogistica)
+cat("\nError Regresion Logistica:",1-precisionRegresionLogistica)
+
+indice<- which.max(listaprecisiones)
+mejormodelo <- listamodelos[[indice]]
+predicciones <- predict(mejormodelo, type = 'response', newdata = test_set)
+predicciones <- ifelse(predicciones > 0.5, 1, 0)
+predicciones <- factor(predicciones, levels = c("0", "1"), labels = c("MM", "CH"))
+mc <- table(test_set$Purchase, predicciones)
+precision <-(mc[1,1] + mc[2,2]) / (mc[1,1] + mc[2,2] +mc[1,2] + mc[2,1])
+cat("\nPrecision Regresion Logistica:",precision)
+cat("\nError Regresion Logistica:",1-precision)
+```
+
+A continuación para support vector machines, probamos con distintos núcleos y usamos cross=5 para realizar la validación cruzada. El hecho de calcular los valores apropiados para cada núcleo aumenta mucho el tiempo de computación.
+
+```{r}
+
+kernels <- c("linear", "radial", "polynomial", "sigmoid")
+
+for (kernel in kernels) {
+  tobj <- tune.svm(Purchase ~ ., data = training_set, gamma = 10^(-3:0), cost = 10^(0:2), kernel = kernel)
+  clasificador <- svm(Purchase ~ ., data = training_set, gamma = tobj$best.parameters[[1]], cost = tobj$best.parameters[[2]],kernel = kernel, cross = 3, max_iter = 5)
+  
+  y_pred <- predict(clasificador, test_set[, -1])
+  y_pred <- ifelse(y_pred > 0.5, 1, 0)
+  
+  true <- test_set$Purchase
+  
+  mc <- table(y_pred, true)
+  precisionSVM <- (mc[1, 1] + mc[2, 2]) / (mc[1, 1] + mc[2, 2] + mc[1, 2] + mc[2, 1])
+  
+  cat("\nKernel:", kernel)
+  cat("\nPrecision SVM:", precisionSVM)
+  cat("\nError SVM:", 1 - precisionSVM)
+}
+```
+
+El siguiente código entrena prueba los árboles de decisión.
+
+```{r}
+listamodelos <- list()
+listaprecisiones <- list()
+
+for (i in 1:5) {
+  training_fold <- training_set[-folds[[i]], ]
+  test_fold <- training_set[folds[[i]], ]
+  training_fold$Purchase <- as.factor(training_fold$Purchase)
+  test_fold$Purchase <- as.factor(test_fold$Purchase)
+  clasificador <- rpart(Purchase ~ ., data = training_fold)
+  y_pred <- predict(clasificador, newdata = test_fold, type = 'class')
+  mc <- table(test_fold$Purchase, y_pred)
+  precision <- (mc[1,1] + mc[2,2]) / (mc[1,1] + mc[2,2] +mc[1,2] + mc[2,1])
+  listamodelos[[i]] <- clasificador
+  listaprecisiones[[i]] <- precision
+}
+
+indice<- which.max(listaprecisiones)
+mejormodelo <- listamodelos[[indice]]
+precisionDecisionTree <- mean(as.numeric(listaprecisiones))
+cat("\nPrecision media DecisionTree:",precisionDecisionTree)
+cat("\nError medio DecisionTree:",1-precisionDecisionTree)
+
+mejormodelo <- listamodelos[[indice]]
+test_set$Purchase <- as.factor(test_set$Purchase)
+predicciones <- predict(mejormodelo, newdata = test_set, type = 'class')
+mc <- table(test_set$Purchase, predicciones)
+
+precision <-(mc[1,1] + mc[2,2]) / (mc[1,1] + mc[2,2] +mc[1,2] + mc[2,1])
+cat("\nPrecision DecisionTree:",precision)
+cat("\nError DecisionTree:",1-precision)
+
+```
+
+Como modelo avanzado, primero veremos los random forest.
+
+```{r}
+listamodelos <- list()
+listaprecisiones <- list()
+
+for (i in 1:5) {
+  training_fold <- training_set[-folds[[i]], ]
+  test_fold <- training_set[folds[[i]], ]
+  training_fold$Purchase <- as.factor(training_fold$Purchase)
+  test_fold$Purchase <- as.factor(test_fold$Purchase)
+  clasificador <- randomForest(Purchase ~ ., data = training_fold, ntree = 1000)
+  y_pred <- predict(clasificador, newdata = test_fold)
+  mc <- table(test_fold$Purchase, y_pred)
+  precision <- (mc[1,1] + mc[2,2]) / (mc[1,1] + mc[2,2] +mc[1,2] + mc[2,1])
+  listamodelos[[i]] <- clasificador
+  listaprecisiones[[i]] <- precision
+}
+precisionRandomForest <- mean(as.numeric(listaprecisiones))
+
+cat("\nPrecision media RandomForest:",precisionRandomForest)
+cat("\nError medio RandomForest:",1-precisionRandomForest)
+
+mejormodelo <- listamodelos[[indice]]
+test_set$Purchase <- as.factor(test_set$Purchase)
+predicciones <- predict(mejormodelo, newdata = test_set, type = 'class')
+mc <- table(test_set$Purchase, predicciones)
+
+precision <-(mc[1,1] + mc[2,2]) / (mc[1,1] + mc[2,2] +mc[1,2] + mc[2,1])
+cat("\nPrecision RandomForest:",precision)
+cat("\nError RandomForest:",1-precision)
+```
+
+Finalmente el último modelo será ADABOOST:
+
+```{r}
+listamodelos <- list()
+listaprecisiones <- list()
+
+for (i in 1:5) {
+  training_fold <- training_set[-folds[[i]], ]
+  test_fold <- training_set[folds[[i]], ]
+  training_fold$Purchase <- as.factor(training_fold$Purchase)
+  test_fold$Purchase <- as.factor(test_fold$Purchase)
+  clasificador <- boosting(Purchase ~ ., data = training_fold, boos=TRUE, mfinal=50)
+  y_pred <- predict(clasificador, newdata = test_fold)$class
+  mc <- table(test_fold$Purchase, y_pred)
+  precision <- (mc[1,1] + mc[2,2]) / (mc[1,1] + mc[2,2] +mc[1,2] + mc[2,1])
+  listamodelos[[i]] <- clasificador
+  listaprecisiones[[i]] <- precision
+}
+precisionAdaBoost <- mean(as.numeric(listaprecisiones))
+
+cat("\nPrecision media AdaBoost:",precisionAdaBoost)
+cat("\nError medio AdaBoost:",1-precisionAdaBoost)
+
+mejormodelo <- listamodelos[[indice]]
+test_set$Purchase <- as.factor(test_set$Purchase)
+predicciones <- predict(mejormodelo, newdata = test_set)$class
+mc <- table(test_set$Purchase, predicciones)
+
+precision <-(mc[1,1] + mc[2,2]) / (mc[1,1] + mc[2,2] +mc[1,2] + mc[2,1])
+cat("\nPrecision AdaBoost:",precision)
+cat("\nError AdaBoost:",1-precision)
+```
+
+Después de ver los resultados basados en la métrica eligida(precisión), eligiríamos la regresión logística pues es el modelo que menor error comete. Por otro lado también podríamos usar la discriminación lineal pues la diferencia entre los dos resultados es muy pequeña.
+
+A la horaa de implementar el modelo en la realidad la elección dependería de cómo se toman los datos y de la velocidad de resolución de modelo. A priori podemos pensar que LDA es más rápido por su sencillez pero puede dar algún problema con las correlaciones de las variables.

@@ -1,0 +1,600 @@
+---
+title: "Análisis Exploratorio de Datos"
+---
+
+# Resumen Ejecutivo
+
+## Nombre del conjunto de datos
+
+KOI(Kepler Objects of Interest) cumulative table.
+
+## Propósito de los datos
+
+La tabla acumulativa de KOI recopila información de las tablas individuales de actividad KOI que describen los resultados actuales de diferentes búsquedas de las curvas de luz de Kepler. El propósito de la tabla acumulativa es proporcionar en un solo lugar las disposiciones más precisas, así como información estelar y planetaria para todos los KOI. Toda la información en esta tabla tiene su origen en otras tablas de actividad KOI.
+
+## Origen
+
+### a) Origen de los datos
+
+Los datos han sido recogidos por el observatorio espacial Kepler de la NASA a lo largo de casi 10 años. Para más información acerca del satélite, ver [Wikipedia - Telescopio Espacial Kepler](https://es.wikipedia.org/wiki/Kepler_(telescopio_espacial)).
+
+### b) Origen del conjunto de datos
+
+NASA Exoplanet Archive. NASA Exoplanet Science Institute. https://exoplanetarchive.ipac.caltech.edu/cgi-bin/TblView/nph-tblView?app=ExoTbls&config=cumulative.
+
+### c) Fecha de descarga
+
+Diciembre de 2023.
+
+## Usos anteriores del conjunto de datos.
+
+### a) Uso original:
+
+Detectar planetas fuera de nuestro sistema solar, es decir, exoplanetas.
+
+### b) Otros usos:
+
+Dado que el conjunto de datos es público, ha sido ampliamente utilizado en numerosos trabajos. A continuación, se citan algunos ejemplos:
+
+-   El trabajo realizado por Aditeya Baral (@aditeyabaral), Ameya Bhamare (@ameyabhamare), y Saarthak Agarwal (@saarthak-agarwal) se encuentra disponible en el repositorio de GitHub: [kepler-exoplanet-analysis](https://github.com/aditeyabaral/kepler-exoplanet-analysis).
+
+-   Batalha, N. M. (2014). "Exploring exoplanet populations with NASA's Kepler Mission." Proceedings of the National Academy of Sciences (PNAS).
+
+## Número de instancias.
+
+Un total de 9564 observaciones.
+
+## Información de los atributos.
+
+En el conjunto de datos aparecen varios tipos de IDs: kepid es el identificador asociado a una observación específica, kepler_name es el nombre de dicha estrella y kepoi_name es el nombre asociado a un candidato a exoplaneta. También aparece koi_disposition que es la disposición del archivo de exoplanetas que nos dirá como clasifican las observaciones entre CANDIDATE, FALSE POSITIVE, CONFIRMED y en el caso de la disposición de Kepler koi_pdisposition como CANDIDATE o FALSE POSITIVE. Además también aparecen otras 22 variables para determinar la disposición de la observación.
+
+| Nombre            | Tipo de dato        | Unidad de medida                      | Descripción                                                                       |
+|--------------|--------------|-----------------|----------------------------|
+| kepid             | Identificador único | \-                                    | Identificación única del objeto de interés                                        |
+| kepoi_name        | Identificador único | \-                                    | Identificación única del objeto de interés dado por Kepler.                       |
+| kepler_name       | Nominal             | \-                                    | Nombre del planeta según la nomenclatura de Kepler.                               |
+| koi_disposition   | Nominal             | \-                                    | Disposición del Archivo de Exoplanetas.                                           |
+| koi_pdisposition  | Nominal             | \-                                    | Disposición utilizando Datos de Kepler.                                           |
+| koi_score         | Continuo            | \-                                    | Puntuación de Disposición.                                                        |
+| koi_fpflag_nt     | Binario             | \-                                    | Bandera de Falso Positivo No Similar a Tránsito.                                  |
+| koi_fpflag_ss     | Binario             | \-                                    | Bandera de Falso Positivo Eclipse Estelar.                                        |
+| koi_fpflag_co     | Binario             | \-                                    | Bandera de Falso Positivo Desplazamiento del Centroide.                           |
+| koi_fpflag_ec     | Binario             | \-                                    | Bandera de Falso Positivo Contaminación Indicada por Coincidencia Efeméride.      |
+| koi_period        | Continuo            | Días                                  | Período Orbital en días.                                                          |
+| koi_period_err1   | Continuo            | Días                                  | Incertidumbre Superior del Período Orbital en días.                               |
+| koi_period_err2   | Continuo            | Días                                  | Incertidumbre Inferior del Período Orbital en días.                               |
+| koi_time0bk       | Continuo            | BKJD (Barycentric Kepler Julian Date) | Época de Tránsito en BKJD (Barycentric Kepler Julian Date).                       |
+| koi_time0bk_err1  | Continuo            | BKJD (Barycentric Kepler Julian Date) | Incertidumbre Superior de la Época de Tránsito en BKJD.                           |
+| koi_time0bk_err2  | Continuo            | BKJD (Barycentric Kepler Julian Date) | Incertidumbre Inferior de la Época de Tránsito en BKJD.                           |
+| koi_impact        | Continuo            | \-                                    | Parámetro de Impacto.                                                             |
+| koi_impact_err1   | Continuo            | \-                                    | Incertidumbre Superior del Parámetro de Impacto.                                  |
+| koi_impact_err2   | Continuo            | \-                                    | Incertidumbre Inferior del Parámetro de Impacto.                                  |
+| koi_duration      | Continuo            | Horas                                 | Duración del Tránsito en horas.                                                   |
+| koi_duration_err1 | Continuo            | Horas                                 | Incertidumbre Superior de la Duración del Tránsito en horas.                      |
+| koi_duration_err2 | Continuo            | Horas                                 | Incertidumbre Inferior de la Duración del Tránsito en horas.                      |
+| koi_depth         | Continuo            | ppm (partes por millón)               | Profundidad del Tránsito en partes por millón (ppm).                              |
+| koi_depth_err1    | Continuo            | ppm (partes por millón)               | Incertidumbre Superior de la Profundidad del Tránsito en ppm.                     |
+| koi_depth_err2    | Continuo            | ppm (partes por millón)               | Incertidumbre Inferior de la Profundidad del Tránsito en ppm.                     |
+| koi_prad          | Continuo            | Radios Terrestres                     | Radio Planetario en radios terrestres.                                            |
+| koi_prad_err1     | Continuo            | Radios Terrestres                     | Incertidumbre Superior del Radio Planetario en radios terrestres.                 |
+| koi_prad_err2     | Continuo            | Radios Terrestres                     | Incertidumbre Inferior del Radio Planetario en radios terrestres.                 |
+| koi_teq           | Continuo            | Kelvin                                | Temperatura de Equilibrio en Kelvin.                                              |
+| koi_teq_err1      | Continuo            | Kelvin                                | Incertidumbre Superior de la Temperatura de Equilibrio en Kelvin.                 |
+| koi_teq_err2      | Continuo            | Kelvin                                | Incertidumbre Inferior de la Temperatura de Equilibrio en Kelvin.                 |
+| koi_insol         | Continuo            | Flujo Terrestre                       | Flujo de Insolación en flujo terrestre.                                           |
+| koi_insol_err1    | Continuo            | Flujo Terrestre                       | Incertidumbre Superior del Flujo de Insolación en flujo terrestre.                |
+| koi_insol_err2    | Continuo            | Flujo Terrestre                       | Incertidumbre Inferior del Flujo de Insolación en flujo terrestre.                |
+| koi_model_snr     | Continuo            | \-                                    | Relación señal-ruido del tránsito.                                                |
+| koi_tce_plnt_num  | Entero              | \-                                    | Número de Planeta TCE.                                                            |
+| koi_tce_delivname | Nominal             | \-                                    | Entrega TCE.                                                                      |
+| koi_steff         | Continuo            | Kelvin                                | Temperatura Efectiva Estelar en Kelvin.                                           |
+| koi_steff_err1    | Continuo            | Kelvin                                | Incertidumbre Superior de la Temperatura Efectiva Estelar en Kelvin.              |
+| koi_steff_err2    | Continuo            | Kelvin                                | Incertidumbre Inferior de la Temperatura Efectiva Estelar en Kelvin.              |
+| koi_slogg         | Continuo            | $log_{10}(cm/s^2)$                    | Gravedad Superficial Estelar en $log_{10}(cm/s^2)$ .                              |
+| koi_slogg_err1    | Continuo            | $log_{10}(cm/s^2)$                    | Incertidumbre Superior de la Gravedad Superficial Estelar en $log_{10}(cm/s^2)$ . |
+| koi_slogg_err2    | Continuo            | $log_{10}(cm/s^2)$                    | Incertidumbre Inferior de la Gravedad Superficial Estelar en $log_{10}(cm/s^2)$ . |
+| koi_srad          | Continuo            | Radios Solares                        | Radio Estelar en radios solares.                                                  |
+| koi_srad_err1     | Continuo            | Radios Solares                        | Incertidumbre Superior del Radio Estelar en radios solares.                       |
+| koi_srad_err2     | Continuo            | Radios Solares                        | Incertidumbre Inferior del Radio Estelar en radios solares.                       |
+| ra                | Continuo            | Grados Decimales                      | Ascensión Recta en grados decimales.                                              |
+| dec               | Continuo            | Grados Decimales                      | Declinación en grados decimales.                                                  |
+| koi_kepmag        | Continuo            | \-                                    | Magnitud en la banda Kepler.                                                      |
+
+Cantidad de atributos por tipo:
+
+El conjunto de datos incluye un total de 49 atributos. Entre ellos, tenemos 2 identificadores únicos, hay 4 atributos categóricos, los cuales son nominales. Además, se presentan 16 atributos numéricos, distribuidos en 9 atributos continuos y 7 atributos discretos. Por último, hay que mencionar que aparecen 22 atributos de errores que indican el error superior e inferior de 11 variables.
+
+# Introducción
+
+Desde los inicios de nuestra especie hemos observado el firmamento. Nuestra innata curiosidad buscaba respuestas a lo que podíamos ver y hasta recientemente en la historia no hemos sido capaces de responder con seguridad. Aún así, hay muchas preguntas aún sin respuesta y por ello seguimos explorando el universo en el que vivimos. ¿Cúal es nuestro origen?¿Estamos solos?¿Podemos habitar otro planeta?
+
+Con el objetivo de responder a estas preguntas lanzamos satélites y sondas desde el siglo anterior. Hasta lanzar el observatorio espacial Kepler el 7 de marzo de 2009 la cifra de exoplanetas conocidos era inferior a la que Kepler eventualmente contribuyó a descubrir.
+
+El Observatorio Espacial Kepler, lanzado en 2009, jugó un papel fundamental en el aumento significativo del número de exoplanetas conocidos. Utilizando el método de tránsito, Kepler observó la disminución en el brillo de las estrellas cuando un planeta pasaba frente a ellas, lo que permitió identificar y confirmar numerosos exoplanetas.
+
+El telescopio Kepler proporcionó datos valiosos para la misión de búsqueda de exoplanetas, y su sucesor, el Telescopio Espacial TESS (Transiting Exoplanet Survey Satellite), lanzado en 2018, continuó esta tarea al identificar exoplanetas adicionales en diferentes regiones del cielo.
+
+En este análisis de datos estudiaremos los datos que recogió dicho observatorio a lo largo de casi 10 años de misión hasta que vació sus reservas de combustible. Estudiaremos las variables que medía e intentaremos descubrir alguna forma para predecir si una observación es un exoplaneta o no.
+
+# Eliminación de las variables que miden errores
+
+En primer lugar, cargamos el conjunto de datos y mostramos sus primeras filas
+
+```{r, results='asis'}
+suppressMessages({
+    suppressWarnings({
+library(rhandsontable)
+library(dplyr)
+library(corrplot)
+library(ggplot2)
+library(skimr)
+library(caTools)
+library(MASS)
+library(dplyr)
+library(rgl)
+library(caret)
+library(factoextra)  
+library(plot3D)
+options(scipen = 999)
+
+    }) 
+      })
+datos <- read.csv("C:/Users/Miguel/Downloads/cumulative_2023.12.31_07.27.29.CSV",header = TRUE)
+ 
+columnas_disponibles <- colnames(datos)
+tabla_interactiva <- rhandsontable(datos, selectCallback = TRUE)
+tabla_interactiva
+
+```
+
+Comenzaremos viendo si dichas variables son necesarias para el estudio de nuestro conjunto de datos. Para ello convertimos la varible koi_disposition que es la que nos muestra la disposición de un exoplaneta, es decir, si es un exoplaneta un candidato o un falso positivo detectado por el telescopio.
+
+```{r }
+datosshow <- datos[, -c(1,2,3,5,30,31,37)]
+datosshow$koi_disposition <- ifelse(datosshow$koi_disposition == "CONFIRMED", 1,
+                                ifelse(datosshow$koi_disposition == "CANDIDATE", 0, 2))
+datosshow<-na.omit(datosshow)
+correlation_matrix <- cor(datosshow)
+corrplot(correlation_matrix, tl.cex = 0.6)
+```
+
+Podemos observar que los errores no tienen correlación alta con las variables que miden las disposiciones de las observaciones y por tanto trabajaremos con el conjunto de datos sin ellos.
+
+```{r }
+columnas_a_mantener <- colnames(datos)[!grepl("err", colnames(datos))]
+datos <- datos[, columnas_a_mantener]
+```
+
+Ahora nuestro conjunto de datos se reduce a 27 variables.
+
+# Estadísticas de los atributos
+
+Antes de analizar cada tipo de atributo analizaremos los datos no disponibles o NAs de nuestro conjunto de datos completo. A continuación mostramos cuántos datos faltantes tienen nuestras variables:
+
+```{r}
+valores_faltantes <- colSums(is.na(datos))
+print(valores_faltantes)
+```
+
+El siguiente gráfico nos indica qué variables tienen mayor número de NAs.
+
+```{r}
+rojo <- rgb(0.925, 0.424, 0.392)
+porcentaje_na <- valores_faltantes / nrow(datos)
+df_porcentaje_na <- data.frame(variable = names(porcentaje_na), porcentaje = porcentaje_na)
+df_porcentaje_na <- data.frame(variable = names(porcentaje_na), porcentaje = porcentaje_na) %>%
+  filter(porcentaje > 0) %>%
+  arrange(desc(porcentaje))
+
+suppressWarnings({
+ggplot(df_porcentaje_na, aes(x = reorder(variable, -porcentaje), y = porcentaje)) +
+  geom_bar(stat = "identity", fill = rojo) +
+  labs(title = "Porcentaje de NA por Variable",
+       x = "Variable") +
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        panel.grid = element_blank(),
+        panel.background = element_rect(colour = "black", size = 2),
+        plot.title = element_text(hjust = 0.5))+
+  theme(plot.margin = margin(l = 30, r = 10, b = 10, t = 10, unit = "pt"))
+})
+```
+
+Tras ver el número de NAs de las variables resulta curioso que algunas tengan exactamente el mismo número, por ello vamos a comprobar si dichos valores ausentes son en las mismas observaciones.
+
+```{r}
+NASkoi_impact <- datos[is.na(datos$koi_impact), ]
+NASkoi_depth <- datos[is.na(datos$koi_depth), ]
+NASkoi_prad <- datos[is.na(datos$koi_prad), ]
+NASkoi_depth <- datos[is.na(datos$koi_depth), ]
+NASkoi_teq <- datos[is.na(datos$koi_teq), ]
+NASkoi_model_snr <- datos[is.na(datos$koi_model_snr), ]
+NASkoi_steff <- datos[is.na(datos$koi_steff), ]
+NASkoi_slogg <- datos[is.na(datos$koi_slogg), ]
+NASkoi_srad <- datos[is.na(datos$koi_srad), ]
+
+nas_data_frames <- list(NASkoi_impact, NASkoi_depth, NASkoi_prad, NASkoi_depth, NASkoi_teq, NASkoi_model_snr, NASkoi_steff, NASkoi_slogg, NASkoi_srad)
+
+resultados <- sapply(2:length(nas_data_frames), function(i) identical(nas_data_frames[[1]], nas_data_frames[[i]]))
+
+resultados
+```
+
+Como vemos todos esos NAS son de las mismas observaciones, veamos la frecuencia de su disposición.
+
+```{r}
+disposicionplaneta363NA<-NASkoi_impact$koi_disposition
+frecuencia363NA<-table(disposicionplaneta363NA)
+print(frecuencia363NA)
+```
+
+```{r}
+disposicionplaneta363NA <- c(CANDIDATE = 104, CONFIRMED = 2, `FALSE POSITIVE` = 257)
+barplot(disposicionplaneta363NA, col = rojo,
+        main = "Gráfico de Barras de Frecuencias",
+        xlab = "Disposición de las observaciones",
+        ylab = "Frecuencia")
+```
+
+Alrededor del 70% de los NAs que disponemos son falsos positivos lo que nos indica que si el telescopio no ha podido recopilar dichos datos es porque es bastante probable que no haya observado un exoplaneta.
+
+Ahora vamos a estudiar los otros 3 data frames. Empezaremos por los que no disponen de "Número de Planeta TCE" que es un identificador utilizado en el marco del proyecto Kepler para numerar y seguir los eventos que podrían ser causados por la presencia de exoplanetas.
+
+```{r}
+NASkoi_tce_plnt_num <- datos[is.na(datos$koi_tce_plnt_num), ]
+disposicionplanetakoi_tce_plnt_num<-NASkoi_tce_plnt_num$koi_disposition
+frecuenciakoi_tce_plnt_num<-table(disposicionplanetakoi_tce_plnt_num)
+print(frecuenciakoi_tce_plnt_num)
+```
+
+En este caso observamos que el porcenttaje de falsos positivos es mucho mayor. Seguimos estudiando el Flujo de Insolación en flujo terrestre que es una medida que proporciona una forma de comparar la energía solar recibida por un objeto celeste.
+
+```{r}
+NASkoi_koi_insol <- datos[is.na(datos$koi_insol), ]
+disposicionplanetakoi_insol<-NASkoi_koi_insol$koi_disposition
+frecuenciakoi_insol<-table(disposicionplanetakoi_insol)
+print(frecuenciakoi_insol)
+```
+
+Al igual que en casos anteriores 2 tercias partes de dichas observaciones son falsos positivos.
+
+Por último estudiaremos el atributo que mayor porcentaje de NAs contiene. Además es el más importante pues es el que más correlacionado está con la clase koi_disposition.
+
+```{r}
+NASkoi_score <- datos[is.na(datos$koi_score), ]
+disposicionplanetakoi_score<-NASkoi_score$koi_disposition
+frecuenciakoi_score<-table(disposicionplanetakoi_score)
+print(frecuenciakoi_score)
+```
+
+En este caso el porcentaje es un poco menor alrededor de $\frac{3}{5}$ en vez $\frac{2}{3}$. Posteriormente estudiaremos más a fondo esta variable.
+
+## Atributos nominales
+
+Los 4 atributos nominales son kepler_name, koi_disposition, koi_pdisposition y koi_tce_delivname. A continuación daremos la frecuencia de dichas variables.
+
+El atributo kepler_name es el nombre del astro una vez confirmada su existencia. Vemos que hemos detectado con éxito 6821 astros y no necesariamente son exoplanetas, estudiando las demás variables veremos cuántos lo son en verdad.
+
+```{r}
+datos$kepler_name[datos$kepler_name == ""] <- "Sin datos"
+sum(datos$kepler_name == "Sin datos") 
+```
+
+La siguiente variable es koi koi_disposition que nos dice finalmente la disposición de la observación. Observamos que hay cerca de 2000 observaciones que están pendientes, más de 2700 exoplanetas confirmados y cerca de 5000 falsos positivos. Una posible respuesta al alto número de falsos positivos puede ser que las observaciones se traten de astoreoides o cometas en vez de exoplanetas.
+
+```{r}
+table(datos$koi_disposition)
+```
+
+A continuación vemos la frecuencia de la variable koi_pdisposition que nos indica como clasifica el telescopio Kepler las observaciones, como vemos el número de flasos positivos es similar al de la realidad. Más a delante estudiaremos esta clasificación.
+
+```{r}
+table(datos$koi_pdisposition)
+```
+
+Por último estudiaremos la frecuencia de koi_tce_delivname, este atributo nos indica cuando se recibieron los datos.
+
+```{r}
+unique(datos$koi_tce_delivname)
+datos$koi_tce_delivname[datos$koi_tce_delivname == ""] <- "Sin datos"
+
+length(unique(datos$koi_tce_delivname))
+table(datos$koi_tce_delivname)
+```
+
+## Atributos continuos
+
+Lo primero que hacemos es eliminar las columnas que no contienen datos continuos y realizaremos un análisis de dichos atributos
+
+```{r}
+datoscontinuos<- datos[,-c(1,2,3,4,5,7,8,9,10,20,21)]
+resultado_skim <- skim(datoscontinuos)
+resultado_skim <- resultado_skim[,-c(1,3,4,12)]
+tabla_interactiva <- rhandsontable(resultado_skim, selectCallback = TRUE)
+tabla_interactiva
+```
+
+Ahora mostraremos los histogramas de las variables.
+
+```{r}
+
+suppressMessages({
+         suppressWarnings({
+                     for (col in colnames(datoscontinuos)) {
+                                     p <- ggplot(datos, aes(x = datoscontinuos[[col]])) +
+                                      geom_histogram(fill = rojo, color = "black", alpha = 0.7) +
+                                      ggtitle(paste("Histograma de", col)) +
+                                      labs(x=col) +
+                                      theme_minimal() +
+                                      theme(panel.grid = element_blank(),
+                                      panel.background = element_rect(colour = "black", size = 2),
+                                      plot.title = element_text(hjust = 0.5))
+                          
+  print(p)  
+}
+})})
+```
+
+Ahora podemos agrupar las variables según su distribución.
+
+Koi_period, koi_impact, koi_depth, koi_prad, koi_insol, koi_srad están distribuidas a la izquierda concentrándose en el 0.
+
+Koi_score sigue una distribución bimodal muy pronunciada en sus extremos.
+
+Koi_time0bk ,koi_teq, koi_duration y koi_model_snr siguen una exponencial.
+
+Koi_kepmag, ra y koi_slogg son betas.
+
+Koi_steff sigue una normal.
+
+des parece una campana porque decae en los extremos aunque no tiene pico en el centro.
+
+## Atributos discretos
+
+```{r}
+datosdiscretos<- datos[,c(7,8,9,10,20)]
+frecuenciakoi_fpflag_nt<- table(datosdiscretos$koi_fpflag_nt)
+barplot(frecuenciakoi_fpflag_nt, col = rojo,
+        main = "Gráfico de Barras de Frecuencias",
+        xlab = "Bandera de Falso Positivo No Similar a Tránsito. ",
+        ylab = "Frecuencia")
+```
+
+```{r}
+frecuenciakoi_fpflag_ss<- table(datosdiscretos$koi_fpflag_ss)
+barplot(frecuenciakoi_fpflag_ss, col = rojo,
+        main = "Gráfico de Barras de Frecuencias",
+        xlab = "Bandera de Falso Positivo Eclipse Estelar. ",
+        ylab = "Frecuencia")
+```
+
+```{r}
+frecuenciakoi_fpflag_co<- table(datosdiscretos$koi_fpflag_co)
+barplot(frecuenciakoi_fpflag_co, col = rojo,
+        main = "Gráfico de Barras de Frecuencias",
+        xlab = "Bandera de Falso Positivo Desplazamiento del Centroide.",
+        ylab = "Frecuencia")
+```
+
+```{r}
+frecuenciakoi_fpflag_ec<- table(datosdiscretos$koi_fpflag_ec)
+barplot(frecuenciakoi_fpflag_ec, col = rojo,
+        main = "Gráfico de Barras de Frecuencias",
+        xlab = "Bandera de Falso Positivo Contaminación Indicada por Coincidencia Efeméride. ",
+        ylab = "Frecuencia")
+```
+
+Estas banderas nos indican cuando ha ocurrido un falso positivo.
+
+```{r}
+frecuenciakoi_tce_plnt_num<- table(datosdiscretos$koi_tce_plnt_num)
+barplot(frecuenciakoi_tce_plnt_num, col = rojo,
+        main = "Gráfico de Barras de Frecuencias",
+        xlab = "Número de Planeta TCE.",
+        ylab = "Frecuencia")
+```
+
+# ¿Cómo agrupamos nuestras observaciones?
+
+En este apartado intentaremos agrupar las observaciones usando clustering para ver cuántas similares obtenemos y ver si podemos dividirlas en las que son falsos positivos y candidatos a exoplanetas.
+
+```{r}
+datossinna<-na.omit(datos)
+datossinna<-datossinna[,-c(1,2,3,4,5,20,21)]
+```
+
+Vamos a realizar una transformación a escala logarítmica para que nuestro modelo funcione mejor.
+
+```{r}
+datossinna <- datossinna + 0.01
+logscaled_data <- log(datossinna)
+```
+
+A continuación probaremos dos tipos de escalados a ver cual recoge más información.
+
+```{r}
+datosscale <- scale(logscaled_data)
+
+min_max_scaler <- function(x) {
+  (x - min(x)) / (max(x) - min(x))
+}
+
+datosminmax <- apply(logscaled_data, 2, min_max_scaler)
+```
+
+Ahora analizamos el que resume mejor las variables usando prcomp. En primer lugar usando scale.
+
+```{r}
+pr.out.scale <- prcomp(datosscale, scale = FALSE)
+pr.var.scale <- pr.out.scale$sdev^2
+pve.scale <- pr.var.scale / sum(pr.var.scale) 
+pve.scale*100
+```
+
+Ahora veamos usando minmax.
+
+```{r}
+pr.out.minmax <- prcomp(datosminmax, scale = FALSE)
+pr.var.minmax <- pr.out.minmax$sdev^2
+pve.minmax <- pr.var.minmax / sum(pr.var.minmax) 
+pve.minmax*100
+```
+
+Dibujamos los datos en las 3 primeras componentes principales
+
+```{r}
+set.seed(1234)
+
+indices_aleatorios <- sample(1:nrow(pr.out.minmax$x), size = nrow(pr.out.minmax$x) / 2)
+
+pca_data <- pr.out.minmax$x[indices_aleatorios, 1:3]
+
+
+#plot3d(pca_data, col = rojo, type = "s", radius = 0.1)
+
+scatter3D(pca_data[, 1], pca_data[, 2], pca_data[, 3], col = rojo, pch = 16,
+          xlab = "Componente 1", ylab = "Componente 2", zlab = "Componente 3")
+
+
+```
+
+Ahora realizaremos un clustering para detectar el número de clusters.
+
+```{r}
+
+clus <- hclust(dist(datosminmax), method = "ward.D2")
+plot(clus)
+```
+
+# Predicción de los candidatos
+
+A continuación probaremos a hacer un modelo que nos prediga si nuestras observaciones serán exoplanetas o no. Para ello separaremos los datos sin NA en 3 grupos, los que todavía no están etiquetados, los de prueba y los de test.
+
+```{r}
+
+datossinna<-na.omit(datos)
+
+datoscandidatos <- datossinna[datossinna$koi_disposition=="CANDIDATE",]
+datosmodelo <- datossinna[datossinna$koi_disposition!="CANDIDATE",]
+
+split <- sample.split(datosmodelo$koi_disposition, SplitRatio = 0.70)
+datosentrenamiento <- subset(datosmodelo, split == TRUE)
+datostest <- subset(datosmodelo, split == FALSE)
+
+```
+
+Una vez seleccionados los datos eliminamos las variables que no vamos a utilizar en los tres conjuntos.
+
+```{r}
+datoscandidatos <- datoscandidatos[,-c(1,2,3,5,20,21)]
+datosentrenamiento <- datosentrenamiento[,-c(1,2,3,5,20,21)]
+datostest <- datostest[,-c(1,2,3,5,20,21)]
+```
+
+Ahora modificamos la etiqueta para que sea un valor numérico.
+
+```{r}
+datosentrenamiento$koi_disposition <- ifelse(datosentrenamiento$koi_disposition == "CONFIRMED", 1, 0)
+datostest$koi_disposition <- ifelse(datostest$koi_disposition == "CONFIRMED", 1, 0)
+```
+
+Ahora entrenamos por validación cruzada un modelo de regresión logística
+
+```{r}
+suppressMessages({
+         suppressWarnings({
+folds <- createFolds(datosentrenamiento$koi_disposition, k = 5)
+
+listamodelos <- list()
+listaprecisiones <- list()
+
+for (i in 1:5) {
+  training_fold <- datosentrenamiento[-folds[[i]],]
+  test_fold <- datosentrenamiento[folds[[i]],]
+  clasificador <- glm(koi_disposition ~ ., family = binomial, data = training_fold)
+  y_pred <- predict(clasificador, type = 'response', newdata = test_fold)
+  y_pred <- ifelse(y_pred > 0.5, 1, 0)
+  y_pred <- factor(y_pred, levels = c("0", "1"), labels = c("MM", "CH"))
+  mc <- table(test_fold$koi_disposition, y_pred)
+  precision <- (mc[1,1] + mc[2,2]) / (mc[1,1] + mc[2,2] +mc[1,2] + mc[2,1])
+  listamodelos[[i]] <- clasificador
+  listaprecisiones[[i]] <- precision
+}
+precisionRegresionLogistica <- mean(as.numeric(listaprecisiones))
+cat("\nPrecision Media Validación Cruzada Regresion Logistica:",precisionRegresionLogistica,"\n")
+cat("\nError Medio Validación Cruzada Regresion Logistica:",1-precisionRegresionLogistica,"\n")
+
+indice<- which.max(listaprecisiones)
+mejormodeloregresionlogistica <- listamodelos[[indice]]
+predicciones <- predict(mejormodeloregresionlogistica, type = 'response', newdata = datostest)
+predicciones <- ifelse(predicciones > 0.5, 1, 0)
+predicciones <- factor(predicciones, levels = c("0", "1"), labels = c("FALSE POSITIVE", "CONFIRMED"))
+mc <- table(datostest$koi_disposition, predicciones)
+precision <-(mc[1,1] + mc[2,2]) / (mc[1,1] + mc[2,2] +mc[1,2] + mc[2,1])
+cat("\nPrecision Regresion Logistica:",precision,"\n")
+cat("\nError Regresion Logistica:",1-precision,"\n")
+print(mc)
+}) })
+```
+
+Entrenamos otro modelo para confirmar los resultados.
+
+```{r}
+suppressMessages({
+         suppressWarnings({
+library(randomForest)
+
+listamodelos <- list()
+listaprecisiones <- list()
+
+for (i in 1:5) {
+  training_fold <- datosentrenamiento[-folds[[i]], ]
+  test_fold <- datosentrenamiento[folds[[i]], ]
+  training_fold$koi_disposition <- as.factor(training_fold$koi_disposition)
+  test_fold$koi_disposition <- as.factor(test_fold$koi_disposition)
+  clasificador <- randomForest(koi_disposition ~ ., data = training_fold, ntree = 1000)
+  y_pred <- predict(clasificador, newdata = test_fold)
+  mc <- table(test_fold$koi_disposition, y_pred)
+  precision <- (mc[1,1] + mc[2,2]) / (mc[1,1] + mc[2,2] +mc[1,2] + mc[2,1])
+  listamodelos[[i]] <- clasificador
+  listaprecisiones[[i]] <- precision
+}
+precisionRandomForest <- mean(as.numeric(listaprecisiones))
+
+cat("\nPrecision media RandomForest:",precisionRandomForest,"\n")
+cat("\nError medio RandomForest:",1-precisionRandomForest,"\n")
+
+mejormodelorandomforest <- listamodelos[[indice]]
+datostest$koi_disposition <- as.factor(datostest$koi_disposition)
+predicciones <- predict(mejormodelorandomforest, newdata = datostest, type = 'class')
+mc <- table(datostest$koi_disposition, predicciones)
+
+precision <-(mc[1,1] + mc[2,2]) / (mc[1,1] + mc[2,2] +mc[1,2] + mc[2,1])
+cat("\nPrecision RandomForest:",precision,"\n")
+cat("\nError RandomForest:",1-precision,"\n")
+print(mc)
+
+}) })
+```
+
+Finalizaremos el trabajo prediciendo los candidatos que todavía no se han confirmado. Usaremos los dos modelos a ver qué obtenemos.
+
+```{r}
+features <- datoscandidatos[, -1]
+
+predicciones_logisticas <- predict(mejormodeloregresionlogistica, newdata = features, type = "response")
+predicciones_randomforest <- predict(mejormodelorandomforest, newdata = features, type = "response")
+
+predicciones_logisticas <- ifelse(predicciones_logisticas > 0.5, 1, 0)
+
+```
+
+Con las siguientes tablas observamos que de dichos candidatos la mayoría o casi todos en el caso de la regresión logística los categorizamos como exoplanetas.
+
+```{r}
+table(predicciones_logisticas)
+```
+
+```{r}
+table(predicciones_randomforest)
+```
