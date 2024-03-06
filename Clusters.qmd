@@ -11,6 +11,8 @@ Comenzaremos cargando las librerías que vamos a utilizar:
 ```{r }
 suppressMessages({
     suppressWarnings({
+      install.packages(c("skimr", "corrplot", "Rtsne", "cluster", "kernlab", "skmeans", "ggplot2", "dplyr", "DescTools", "irlba", "Matrix", "leaflet", "tidyverse", "factoextra", "data.table", "rgl", "magick", "rglwidget", "meanShiftR"))
+
           library(skimr)
           library(corrplot)
           library(Rtsne)
@@ -20,19 +22,16 @@ suppressMessages({
           library(ggplot2)
           library(dplyr)
           library(DescTools)
-          library(Rtsne)
           library(irlba)
           library(Matrix)
           library(leaflet)
           library(tidyverse)  
-          library(cluster)    
           library(factoextra) 
           library(data.table)
           library(rgl)
           library(magick)
           library(rglwidget)
           library(meanShiftR)
-          library(kernlab)
 
 })})
 ```

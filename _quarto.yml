@@ -7,11 +7,19 @@ website:
     left:
       - href: index.qmd
         text: Home
-      - about.qmd
-
+      - href: Eda.qmd
+        text: Exploratory Data Analysis
+      - href: clusters.qmd
+        text: Clusters
+      - href: Rainprediction.qmd
+        text: Rain Prediction
+      - href: zumonaranjas.qmd
+        text: Zumo de Naranjas
+      - href: TFG.qmd
+        text: TFG
 format:
   html:
-    theme: cosmo
+    theme: journal
     css: styles.css
     toc: true
 

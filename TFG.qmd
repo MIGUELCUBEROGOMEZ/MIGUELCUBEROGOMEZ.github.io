@@ -220,6 +220,8 @@ Representaremos el ejemplo motivador y lo resolveremos usando la inferencai vari
 ```{r}
 suppressMessages({
     suppressWarnings({
+      install.packages(c("mvtnorm", "extraDistr", "pracma", "matlib", "ggplot2", "dplyr", "MASS", "ggforce"))
+
 library(mvtnorm) #Para las normales multivariantes
 library(extraDistr) #Para la distribucion multinomial
 library(pracma) #Para integrar
