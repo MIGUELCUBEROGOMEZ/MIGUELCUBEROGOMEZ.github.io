@@ -123,7 +123,9 @@ En primer lugar, cargamos el conjunto de datos y mostramos sus primeras filas
 ```{r, results='asis'}
 suppressMessages({
     suppressWarnings({
-      install.packages(c("rhandsontable", "dplyr", "corrplot", "ggplot2", "skimr", "caTools", "MASS", "rgl", "caret", "factoextra", "plot3D"))
+      install.packages(c("rhandsontable", "dplyr", "corrplot", "ggplot2", "skimr", "caTools", "MASS", "rgl", "caret", "factoextra", "plot3D","estimability"))
+      
+library(estimability)
 library(rhandsontable)
 library(dplyr)
 library(corrplot)

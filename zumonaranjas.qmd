@@ -15,8 +15,9 @@ Cargamos las librerías y vemos los datos, así como su resumen.
 ```{r}
 suppressMessages({
     suppressWarnings({
-      install.packages(c("ISLR2", "corrplot", "ggplot2", "dplyr", "caTools", "caret", "class", "randomForest", "e1071", "MASS", "rpart", "lattice", "nnet", "mlbench", "adabag"), quiet = TRUE)
-
+      install.packages(c("ISLR2", "corrplot", "ggplot2", "dplyr", "caTools", "caret", "class", "randomForest", "e1071", "MASS", "rpart", "lattice", "nnet", "mlbench", "adabag","estimability"), quiet = TRUE)
+      
+library(estimability, quietly = TRUE)
 library(ISLR2, quietly = TRUE)
 library(corrplot, quietly = TRUE)
 library(ggplot2, quietly = TRUE)
