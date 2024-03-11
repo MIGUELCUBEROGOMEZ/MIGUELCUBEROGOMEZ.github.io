@@ -2,9 +2,9 @@
   {
     "objectID": "index.html",
     "href": "index.html",
-    "title": "MIGUELCUBEROGOMEZ.github.io",
+    "title": "Prólogo",
     "section": "",
-    "text": "This is a Quarto website. Rula?\nTo learn more about Quarto websites visit https://quarto.org/docs/websites.\n\n1 + 1\n\n[1] 2"
+    "text": "Prólogo\nEn este libro se recogen la mayoría de trabajos que he realizado en el ámbito de la ciencia de datos y la estadística.\nLa mayoría de estos trabajos han sido realizados en las diversas asignaturas del Máster en Matemáticas salvo el TFG que fue realizado el último curso del Grado en Matemáticas. Todos estos trabajos los he realizado en la Universidad de Valladolid a lo largo del 2023 y del 2024.\nGran parte de estos trabajos han sido resueltos en R salvo los que así estén indicados. El código de estos otros trabajos se encuentra también en el archivo comprimido."
   },
   {
     "objectID": "about.html",
